@@ -45,6 +45,7 @@ uploaded_file = st.file_uploader("Upload an image...", type=["jpg", "png", "jpeg
 if uploaded_file:
     # --- IMAGE PROCESSING ---
     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
+    uploaded_file.seek(0)
     img = cv2.imdecode(file_bytes, 1)
     img_display = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     st.image(img_display, caption="Uploaded Image", width=400)
