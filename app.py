@@ -25,7 +25,7 @@ def extract_dtcwt_features(image_channel, levels=4):
     features = []
     for level in coeffs.highpasses:
         for direction in range(6):
-            mag = np.abs(level[:,:, direction])[cite: 1]
+            mag = np.abs(level[:,:, direction])
             # Basic stats and energy features
             features.extend([np.mean(mag), np.var(mag), np.std(mag), np.max(mag), np.min(mag), np.median(mag), np.sum(mag**2)])
             # Entropy calculation
