@@ -51,7 +51,7 @@ if uploaded_file:
     
     # Preprocess (YCbCr conversion & Resizing to 256x256)[cite: 1]
     img_resized = cv2.resize(img, (256, 256))
-    img_ycc = cv2.cvtColor(img_resized, cv2.COLOR_BGR2YCrCb)[cite: 1]
+    img_ycc = cv2.cvtColor(img_resized, cv2.COLOR_BGR2YCrCb)
     channels = [c/255.0 for c in cv2.split(img_ycc)]
     
     # --- FEATURE EXTRACTION & PREDICTION ---
