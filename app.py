@@ -2,51 +2,58 @@ import streamlit as st
 import cv2
 import numpy as np
 import dtcwt
-import joblib # To load trained model/scaler
+import joblib
 from PIL import Image
 
-# --- FUNCTIONS FROM YOUR NOTEBOOK ---
-def preprocess_for_web(uploaded_file):
-    # Convert Streamlit upload to OpenCV format
+# 1. Load the saved model and scaler
+model = joblib.load('deepfake_svm_model.pkl')
+scaler = joblib.load('scaler.pkl')
+transform = dtcwt.Transform2d()
+
+# 2. Define the extraction function (Copy-paste exactly from your Step 5)
+def extract_dtcwt_features(image_channel, levels=4):
+    coeffs = transform.forward(image_channel, nlevels=levels)
+    features = []
+    for level in coeffs.highpasses:
+        for direction in range(6):
+            mag = np.abs(level[:,:, direction])
+            features.extend([np.mean(mag), np.var(mag), np.std(mag), np.max(mag), np.min(mag), np.median(mag), np.sum(mag**2)])
+            hist, _ = np.histogram(mag, bins=20)
+            prob = hist / (np.sum(hist) + 1e-8)
+            entropy = -np.sum(prob * np.log2(prob + 1e-8))
+            features.append(entropy)
+    return features
+
+# 3. Streamlit UI
+st.set_page_config(page_title="Deepfake Verifier")
+st.title("Deepfake Image Verifier")
+st.write("Using Chrominance DT-CWT Analysis")
+
+uploaded_file = st.file_uploader("Upload an image...", type=["jpg", "png", "jpeg"])
+
+if uploaded_file:
+    # Process Image
     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
     img = cv2.imdecode(file_bytes, 1)
-    img = cv2.resize(img, (256, 256))
-    img_ycc = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
-    y, cr, cb = cv2.split(img_ycc)
-    return [y/255.0, cr/255.0, cb/255.0]
-
-# (Include your extract_dtcwt_features function here exactly as it is in Step 5)
-
-# --- STREAMLIT UI ---
-st.title("Deepfake Detector")
-st.write("Upload an image to check if it's Real or a Deepfake.")
-
-uploaded_file = st.file_uploader("Choose an image...", type=["jpg", "jpeg", "png"])
-
-if uploaded_file is not None:
-    # Display the image
-    image = Image.open(uploaded_file)
-    st.image(image, caption='Uploaded Image', use_column_width=True)
+    img_display = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    st.image(img_display, caption="Uploaded Image", use_container_width=True)
     
-    st.write("Analyzing...")
+    # Preprocess (YCbCr conversion)
+    img_resized = cv2.resize(img, (256, 256))
+    img_ycc = cv2.cvtColor(img_resized, cv2.COLOR_BGR2YCrCb)
+    channels = [c/255.0 for c in cv2.split(img_ycc)]
     
-    # 1. Preprocess
-    channels = preprocess_for_web(uploaded_file)
-    
-    # 2. Extract (Same logic as Step 11 in your notebook)[cite: 1]
-    features = []
+    # Extract & Predict
+    all_features = []
     for ch in channels:
-        feats = extract_dtcwt_features(ch) # You'll paste the function code here
-        features.extend(feats)
+        all_features.extend(extract_dtcwt_features(ch))
     
-    # 3. Predict (Requires your saved model and scaler)
-    # Note: You should save your model using joblib.dump(model, 'model.pkl') in Colab first
-    features_array = np.array(features).reshape(1, -1)
-    scaled_features = scaler.transform(features_array) # scaler must be loaded/defined
-    prediction = model.predict(scaled_features)[0]
-    
-    # 4. Show Result
+    scaled = scaler.transform(np.array(all_features).reshape(1, -1))
+    prediction = model.predict(scaled)[0]
+    score = model.decision_function(scaled)[0]
+
+    # Show Results
     if prediction == 0:
-        st.success("PREDICTION: REAL ")
+        st.success(f"REAL (Confidence Score: {abs(score):.2f})")
     else:
-        st.error("PREDICTION: DEEPFAKE ")
+        st.error(f"DEEPFAKE (Confidence Score: {abs(score):.2f})")
