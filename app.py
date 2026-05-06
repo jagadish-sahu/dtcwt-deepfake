@@ -37,7 +37,7 @@ def extract_dtcwt_features(image_channel, levels=4):
 
 # 3. Streamlit UI Setup
 st.set_page_config(page_title="Deepfake Verifier", layout="wide")
-st.title("🛡️ Deepfake Image Verifier")
+st.title("🛡️ Deepfake Image Verifier(accuracy ~85% ")
 st.write("Analysis based on Chrominance DT-CWT features.")
 
 uploaded_file = st.file_uploader("Upload an image...", type=["jpg", "png", "jpeg"])
@@ -49,7 +49,7 @@ if uploaded_file:
     img_display = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     st.image(img_display, caption="Uploaded Image", width=400)
     
-    # Preprocess (YCbCr conversion & Resizing to 256x256)[cite: 1]
+    # Preprocess (YCbCr conversion & Resizing to 256x256)
     img_resized = cv2.resize(img, (256, 256))
     img_ycc = cv2.cvtColor(img_resized, cv2.COLOR_BGR2YCrCb)
     channels = [c/255.0 for c in cv2.split(img_ycc)]
