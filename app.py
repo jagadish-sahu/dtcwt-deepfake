@@ -21,7 +21,7 @@ transform = dtcwt.Transform2d()
 
 # 2. DT-CWT Extraction Function (Verbatim from Notebook)
 def extract_dtcwt_features(image_channel, levels=4):
-    coeffs = transform.forward(image_channel, nlevels=levels)[cite: 1]
+    coeffs = transform.forward(image_channel, nlevels=levels)
     features = []
     for level in coeffs.highpasses:
         for direction in range(6):
