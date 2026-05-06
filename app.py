@@ -39,7 +39,7 @@ def extract_dtcwt_features(image_channel, levels=4):
 st.set_page_config(page_title="Deepfake Verifier", layout="wide")
 st.title("🛡️ Deepfake Image Verifier(accuracy ~85% ")
 st.write("Analysis based on Chrominance DT-CWT features.")
-
+st.write("By : JAGADISH SAHU")
 uploaded_file = st.file_uploader("Upload an image...", type=["jpg", "png", "jpeg"])
 
 if uploaded_file:
@@ -56,9 +56,13 @@ if uploaded_file:
     channels = [c/255.0 for c in cv2.split(img_ycc)]
     
     # --- FEATURE EXTRACTION & PREDICTION ---
+    # Extract & Predict
     all_features = []
     for ch in channels:
         all_features.extend(extract_dtcwt_features(ch))
+    
+    # DEBUG: See if this changes per image
+    st.write(f"Feature Vector Sum: {np.sum(all_features)}")
     
     # Scale and get decision score[cite: 1]
     scaled = scaler.transform(np.array(all_features).reshape(1, -1))
