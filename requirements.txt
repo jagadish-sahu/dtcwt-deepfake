@@ -5,3 +5,6 @@ dtcwt
 scikit-learn
 joblib
 Pillow
+pandas
+matplotlib
+seaborn
